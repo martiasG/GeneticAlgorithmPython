@@ -2115,7 +2115,7 @@ class GA:
         fitness[:self.last_generation_parents.shape[0]] = self.last_generation_fitness[self.last_generation_parents_indices]
 
         for idx in range(len(parents_to_keep), fitness.shape[0]):
-            fitness[idx] = self.fitness_func(temp_population[idx], None, None)
+            fitness[idx] = self.fitness_func(temp_population[idx], self.extra_data, None)
         average_fitness = numpy.mean(fitness)
 
         return average_fitness, fitness[len(parents_to_keep):]
