@@ -48,7 +48,8 @@ class GA:
                  save_best_solutions=False,
                  save_solutions=False,
                  suppress_warnings=False,
-                 stop_criteria=None):
+                 stop_criteria=None,
+                 extra_data=None):
 
         """
         The constructor of the GA class accepts all parameters required to create an instance of the GA class. It validates such parameters.
@@ -110,6 +111,8 @@ class GA:
 
         stop_criteria: Added in PyGAD 2.15.0. It is assigned to some criteria to stop the evolution if at least one criterion holds.
         """
+
+        self.extra_data = extra_data
 
         # If suppress_warnings is bool and its valud is False, then print warning messages.
         if type(suppress_warnings) is bool:
@@ -635,11 +638,11 @@ class GA:
         # Check if the fitness_func is a function.
         if callable(fitness_func):
             # Check if the fitness function accepts 2 paramaters.
-            if (fitness_func.__code__.co_argcount == 2):
+            if (fitness_func.__code__.co_argcount >= 2 and fitness_func.__code__.co_argcount <= 3):
                 self.fitness_func = fitness_func
             else:
                 self.valid_parameters = False
-                raise ValueError("The fitness function must accept 2 parameters:\n1) A solution to calculate its fitness value.\n2) The solution's index within the population.\n\nThe passed fitness function named '{funcname}' accepts {argcount} parameter(s).".format(funcname=fitness_func.__code__.co_name, argcount=fitness_func.__code__.co_argcount))
+                raise ValueError("The fitness function must accept up to 3 parameters:\n1) A solution to calculate its fitness value.\n2) The solution's index within the population.\n\nThe passed fitness function named '{funcname}' accepts {argcount} parameter(s).".format(funcname=fitness_func.__code__.co_name, argcount=fitness_func.__code__.co_argcount))
         else:
             self.valid_parameters = False
             raise ValueError("The value assigned to the fitness_func parameter is expected to be of type function but ({fitness_func_type}) found.".format(fitness_func_type=type(fitness_func)))
@@ -1160,7 +1163,7 @@ class GA:
                 # Use the parent's index to return its pre-calculated fitness value.
                 fitness = self.previous_generation_fitness[parent_idx]
             else:
-                fitness = self.fitness_func(sol, sol_idx)
+                fitness = self.fitness_func(sol, self.extra_data, sol_idx)
                 if type(fitness) in GA.supported_int_float_types:
                     pass
                 else:
@@ -2112,7 +2115,7 @@ class GA:
         fitness[:self.last_generation_parents.shape[0]] = self.last_generation_fitness[self.last_generation_parents_indices]
 
         for idx in range(len(parents_to_keep), fitness.shape[0]):
-            fitness[idx] = self.fitness_func(temp_population[idx], None)
+            fitness[idx] = self.fitness_func(temp_population[idx], None, None)
         average_fitness = numpy.mean(fitness)
 
         return average_fitness, fitness[len(parents_to_keep):]
